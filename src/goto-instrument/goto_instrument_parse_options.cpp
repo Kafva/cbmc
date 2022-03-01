@@ -100,6 +100,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "reachability_slicer.h"
 #include "remove_function.h"
 #include "rw_set.h"
+#include "set_encoding.h"
 #include "show_locations.h"
 #include "skip_loops.h"
 #include "splice_call.h"
@@ -874,6 +875,34 @@ int goto_instrument_parse_optionst::doit()
       }
       else
         horn_encoding(goto_model, std::cout);
+
+      return CPROVER_EXIT_SUCCESS;
+    }
+
+    if(cmdline.isset("set-encoding"))
+    {
+      log.status() << "Set encoding" << messaget::eom;
+      namespacet ns(goto_model.symbol_table);
+
+      if(cmdline.args.size()==2)
+      {
+        #ifdef _MSC_VER
+        std::ofstream out(widen(cmdline.args[1]));
+        #else
+        std::ofstream out(cmdline.args[1]);
+        #endif
+
+        if(!out)
+        {
+          log.error() << "Failed to open output file " << cmdline.args[1]
+                      << messaget::eom;
+          return CPROVER_EXIT_CONVERSION_FAILED;
+        }
+
+        set_encoding(goto_model, set_encoding_formatt::SMT2, out);
+      }
+      else
+        set_encoding(goto_model, set_encoding_formatt::ASCII, std::cout);
 
       return CPROVER_EXIT_SUCCESS;
     }

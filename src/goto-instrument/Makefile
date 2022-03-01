@@ -63,6 +63,7 @@ SRC = accelerate/accelerate.cpp \
       remove_function.cpp \
       replace_calls.cpp \
       rw_set.cpp \
+      set_encoding.cpp \
       show_locations.cpp \
       skip_loops.cpp \
       source_lines.cpp \

@@ -20,6 +20,35 @@ Author: CM Wintersteiger
 
 #include <goto-programs/goto_model.h>
 
+#define MODDED true
+
+#define SUFFIX "_old"
+irep_idt add_suffix(irep_idt name, bool top_level){
+		auto name_str = id2string(name);
+		size_t idx;
+	
+		if ( (idx = name_str.find("::")) != std::string::npos) {
+			// Function parameters have symbol names on the form 'foo(arg) -> foo::arg'
+			// in this case we only want to rename the top specifier (foo)
+			auto new_name = name_str.substr(0,idx) + SUFFIX + \
+				name_str.substr(idx, name_str.length());
+			return irep_idt(new_name);
+
+		} else if (top_level && name_str.length() > 0) {
+			// If the name is a top level identifier, add a suffix
+			irep_idt new_name = irep_idt(name_str + SUFFIX);			
+			return new_name;
+
+		} else {
+
+			return name;
+		}
+}
+
+bool is_top_level(const symbolt& sym){
+	return id2string(sym.name).find("::") == std::string::npos;
+}
+
 /// Writes a goto program to disc, using goto binary format
 bool write_goto_binary(
   std::ostream &out,
@@ -41,12 +70,29 @@ bool write_goto_binary(
     irepconverter.reference_convert(sym.type, out);
     irepconverter.reference_convert(sym.value, out);
     irepconverter.reference_convert(sym.location, out);
+			
+		auto name 				= sym.name;
+		auto base_name 		= sym.base_name;
+		auto pretty_name 	= sym.pretty_name;
 
-    irepconverter.write_string_ref(out, sym.name);
+		// Only add a suffix if the symbol is not defined in /usr/include and
+		// is not a cprover built-in
+		#if MODDED
+		if (sym.location.as_string().find("/usr/include") == std::string::npos &&
+				id2string(name).find("__CPROVER") == std::string::npos	
+		) {
+			bool top_level = is_top_level(sym);
+			name 					 = add_suffix(sym.name, top_level);
+			base_name 		 = add_suffix(sym.base_name, top_level);
+			pretty_name 	 = add_suffix(sym.pretty_name, top_level);
+		}
+		#endif
+
+    irepconverter.write_string_ref(out, name);
     irepconverter.write_string_ref(out, sym.module);
-    irepconverter.write_string_ref(out, sym.base_name);
+    irepconverter.write_string_ref(out, base_name);
     irepconverter.write_string_ref(out, sym.mode);
-    irepconverter.write_string_ref(out, sym.pretty_name);
+    irepconverter.write_string_ref(out, pretty_name);
 
     write_gb_word(out, 0); // old: sym.ordering
 
@@ -65,7 +111,7 @@ bool write_goto_binary(
     flags = (flags << 1) | static_cast<int>(sym.is_lvalue);
     flags = (flags << 1) | static_cast<int>(sym.is_static_lifetime);
     flags = (flags << 1) | static_cast<int>(sym.is_thread_local);
-    flags = (flags << 1) | static_cast<int>(sym.is_file_local);
+    flags = (flags << 1) | static_cast<int>(sym.is_file_local); // Drop this to make all functions accessible
     flags = (flags << 1) | static_cast<int>(sym.is_extern);
     flags = (flags << 1) | static_cast<int>(sym.is_volatile);
 
@@ -90,7 +136,14 @@ bool write_goto_binary(
       // Since version 2, goto functions are not converted to ireps,
       // instead they are saved in a custom binary format
 
-      write_gb_string(out, id2string(fct.first)); // name
+			auto name_str = id2string(fct.first);
+			#ifdef MODDED
+			if (name_str.find("__CPROVER") == std::string::npos){
+					name_str += SUFFIX;
+			}
+			#endif
+
+      write_gb_string(out, name_str); // name
       write_gb_word(out, fct.second.body.instructions.size()); // # instructions
 
       for(const auto &instruction : fct.second.body.instructions)
@@ -113,7 +166,7 @@ bool write_goto_binary(
         write_gb_word(out, instruction.labels.size());
 
         for(const auto &l_it : instruction.labels)
-          irepconverter.write_string_ref(out, l_it);
+					irepconverter.write_string_ref(out, l_it);
       }
     }
   }

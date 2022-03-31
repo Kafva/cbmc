@@ -21,18 +21,43 @@ Date: May 2007
 #include "exception_utils.h"
 #define SUFFIX "_old_b026324c6904b2a"
 
-void readNamesFromFile(std::string filename, std::unordered_set<std::string> &names) {
+void readNamesFromFile(std::string filename, std::unordered_set<std::string> &global_names) {
   std::ifstream file(filename);
 
   if (file.is_open()) {
     std::string line;
 
     while (std::getline(file,line)) {
-      names.insert(line);
+      global_names.insert(line);
     }
 
     file.close();
   }
+}
+
+irep_idt addSuffixToGlobal(irep_idt ident, std::unordered_set<std::string> &global_names){
+		auto ident_str = id2string(ident);
+		size_t idx;
+
+    // If the symbol references an argument or local variable
+    // we rename the top::level specifier
+		if ( (idx = ident_str.find("::")) != std::string::npos) {
+			
+      auto function_name = ident_str.substr(0,idx);
+
+      if (global_names.count(function_name)) {
+
+        auto children = ident_str.substr(idx, ident_str.length());
+        return irep_idt(function_name + SUFFIX + children);
+      }
+
+    } else if ( global_names.count(ident_str) ) {
+        // Top level identifier
+
+        return irep_idt(ident_str + SUFFIX);
+    }
+
+    return ident;
 }
 
 
@@ -45,17 +70,15 @@ void irep_serializationt::write_irep(
   #ifdef USE_SUFFIX
   if (getenv("USE_SUFFIX") != NULL) {
 
-    std::unordered_set<std::string> names;
-    readNamesFromFile("/home/jonas/Repos/euf/expat/rename.txt", names);
+    std::unordered_set<std::string> global_names;
+    readNamesFromFile("/home/jonas/Repos/euf/expat/rename.txt", global_names);
 
-    //******* TODO ********//
-    //Rename symbols with foo::arg (foo)
+    irep_modded = addSuffixToGlobal(irep.id(), global_names);
 
     // If the irep string corresponds to a global symbol rename it
-    if ( names.count(id2string(irep.id())) ) {
-    //if ( ! is_digits( id2string(irep.id()) ) ){
-      irep_modded =  irep_idt(id2string(irep.id()) + SUFFIX);
-    }
+    //if ( global_names.count(id2string(irep.id())  ) ) {
+    //  irep_modded =  irep_idt(id2string(irep.id()) + SUFFIX);
+    //}
   }
   #endif
   write_string_ref(out, irep_modded);

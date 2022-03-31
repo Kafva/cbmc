@@ -96,8 +96,9 @@ bool write_goto_binary(
       // AND is not a type specifier
       if (sym.location.as_string().find(EXCLUDE_FROM) == std::string::npos &&
           id2string(name).find("__CPROVER") == std::string::npos &&
-          id2string(name).find(SUFFIX) == std::string::npos &&
+          id2string(name).find("arc4random") == std::string::npos &&
           !sym.is_type
+          //id2string(name).find(SUFFIX) == std::string::npos &&
       ) {
         bool top_level = is_top_level(sym.name);
         name 					 = add_suffix(sym.name, top_level);
@@ -162,7 +163,10 @@ bool write_goto_binary(
 
       #ifdef USE_SUFFIX
       if (getenv("USE_SUFFIX") != NULL) {
-        if (name_str.find("__CPROVER") == std::string::npos){
+        if (name_str.find("__CPROVER") == std::string::npos &&
+            name_str.find("arc4random") == std::string::npos
+
+        ){
             name_str += SUFFIX;
         }
       }

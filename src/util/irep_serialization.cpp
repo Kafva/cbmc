@@ -74,11 +74,6 @@ void irep_serializationt::write_irep(
     readNamesFromFile("/home/jonas/Repos/euf/expat/rename.txt", global_names);
 
     irep_modded = addSuffixToGlobal(irep.id(), global_names);
-
-    // If the irep string corresponds to a global symbol rename it
-    //if ( global_names.count(id2string(irep.id())  ) ) {
-    //  irep_modded =  irep_idt(id2string(irep.id()) + SUFFIX);
-    //}
   }
   #endif
   write_string_ref(out, irep_modded);

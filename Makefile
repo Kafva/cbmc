@@ -63,8 +63,8 @@ gdb: install
 
 compile: install
 	USE_SUFFIX=1 goto-cc $(INPUT).c -o $(INPUT)_old.o
-	#USE_SUFFIX=1 cbmc --show-symbol-table $(INPUT)_old.o
-	USE_SUFFIX=1 cbmc --show-goto-functions $(INPUT)_old.o
+	USE_SUFFIX=1 cbmc --show-symbol-table $(INPUT)_old.o
+	#USE_SUFFIX=1 cbmc --show-goto-functions $(INPUT)_old.o
 	goto-cc $(INPUT).c -o $(INPUT).o
 
 

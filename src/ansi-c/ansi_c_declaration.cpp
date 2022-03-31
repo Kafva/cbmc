@@ -123,16 +123,62 @@ typet ansi_c_declarationt::full_type(
   return result;
 }
 
+// ----------------------------------------------
+#ifdef ANSI_MODDED
+bool is_top_level(const symbolt& sym){
+	return id2string(sym.name).find("::") == std::string::npos;
+}
+#define SUFFIX "_old"
+irep_idt add_suffix(irep_idt name, bool top_level){
+		auto name_str = id2string(name);
+		size_t idx;
+	
+		if ( (idx = name_str.find("::")) != std::string::npos) {
+			// Function parameters have symbol names on the form 'foo(arg) -> foo::arg'
+			// in this case we only want to rename the top specifier (foo)
+			auto new_name = name_str.substr(0,idx) + SUFFIX + \
+				name_str.substr(idx, name_str.length());
+			return irep_idt(new_name);
+
+		} else if (top_level && name_str.length() > 0) {
+			// If the name is a top level identifier, add a suffix
+			irep_idt new_name = irep_idt(name_str + SUFFIX);			
+			return new_name;
+
+		} else {
+
+			return name;
+		}
+}
+#endif
+// ----------------------------------------------
+
 void ansi_c_declarationt::to_symbol(
   const ansi_c_declaratort &declarator,
   symbolt &symbol) const
 {
+
+	auto name = declarator.get_name();
+	auto base_name = declarator.get_base_name();
+	auto pretty_name = symbol.name;
+
+	#ifdef ANSI_MODDED
+	if (symbol.location.as_string().find("/usr/include") == std::string::npos &&
+			id2string(name).find("__CPROVER") == std::string::npos	
+	) {
+		bool top_level = is_top_level(symbol);
+		name 					 = add_suffix(sym.name, top_level);
+		base_name 		 = add_suffix(sym.base_name, top_level);
+		pretty_name 	 = add_suffix(sym.pretty_name, top_level);
+	}
+	#endif
+
   symbol.clear();
   symbol.value=declarator.value();
   symbol.type=full_type(declarator);
-  symbol.name=declarator.get_name();
-  symbol.pretty_name=symbol.name;
-  symbol.base_name=declarator.get_base_name();
+  symbol.name=name;
+  symbol.pretty_name=pretty_name;
+  symbol.base_name=base_name;
   symbol.is_type=get_is_typedef();
   symbol.location=declarator.source_location();
   symbol.is_extern=get_is_extern();

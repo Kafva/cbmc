@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "std_expr.h"
 #include "symbol_table.h"
 
+
+
 namespace_baset::~namespace_baset()
 {
 }
@@ -40,7 +42,23 @@ const symbolt &namespace_baset::lookup(const symbol_exprt &expr) const
 /// INVARIANT.
 const symbolt &namespace_baset::lookup(const tag_typet &type) const
 {
-  return lookup(type.get_identifier());
+
+  auto ident = type.get_identifier();
+  #if WRITE_MODDED
+  #define SUFFIX "_old"
+  auto ident_str = id2string(ident);
+
+  if (std::string(getenv("WRITE_MODDED")).find("ON") != std::string::npos) {
+
+    if(ident_str.find("__CPROVER") == std::string::npos){
+      ident = irep_idt(ident_str + SUFFIX);
+    }
+
+  } 
+
+  #endif
+  return lookup(ident);
+
 }
 
 /// Resolve type symbol to the type it points to.

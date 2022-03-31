@@ -20,10 +20,15 @@ Author: CM Wintersteiger
 
 #include <goto-programs/goto_model.h>
 
-#define MODDED true
-
 #define SUFFIX "_old"
-irep_idt add_suffix(irep_idt name, bool top_level){
+
+#ifdef WRITE_MODDED
+
+bool is_top_level(const symbolt& sym){
+	return id2string(sym.name).find("::") == std::string::npos;
+}
+
+irep_idt add_suffix(irep_idt name, bool top_level){	
 		auto name_str = id2string(name);
 		size_t idx;
 	
@@ -44,10 +49,7 @@ irep_idt add_suffix(irep_idt name, bool top_level){
 			return name;
 		}
 }
-
-bool is_top_level(const symbolt& sym){
-	return id2string(sym.name).find("::") == std::string::npos;
-}
+#endif
 
 /// Writes a goto program to disc, using goto binary format
 bool write_goto_binary(
@@ -77,7 +79,7 @@ bool write_goto_binary(
 
 		// Only add a suffix if the symbol is not defined in /usr/include and
 		// is not a cprover built-in
-		#if MODDED
+		#ifdef WRITE_MODDED
 		if (sym.location.as_string().find("/usr/include") == std::string::npos &&
 				id2string(name).find("__CPROVER") == std::string::npos	
 		) {
@@ -137,11 +139,12 @@ bool write_goto_binary(
       // instead they are saved in a custom binary format
 
 			auto name_str = id2string(fct.first);
-			#ifdef MODDED
-			if (name_str.find("__CPROVER") == std::string::npos){
-					name_str += SUFFIX;
-			}
-			#endif
+
+      #ifdef WRITE_MODDED
+        if (name_str.find("__CPROVER") == std::string::npos){
+            name_str += SUFFIX;
+        }
+      #endif
 
       write_gb_string(out, name_str); // name
       write_gb_word(out, fct.second.body.instructions.size()); // # instructions

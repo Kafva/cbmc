@@ -20,10 +20,7 @@ Author: CM Wintersteiger
 
 #include <goto-programs/goto_model.h>
 
-#define SUFFIX "_old"
-
-#ifdef WRITE_MODDED
-
+#ifdef USE_SUFFIX
 bool is_top_level(const symbolt& sym){
 	return id2string(sym.name).find("::") == std::string::npos;
 }
@@ -78,12 +75,14 @@ bool write_goto_binary(
 		auto pretty_name 	 = sym.pretty_name;
     bool is_file_local = sym.is_file_local;
 
-		#ifdef WRITE_MODDED
-    if (getenv("WRITE_MODDED") != NULL) {
-      // Only add a suffix if the symbol is not defined in /usr/include and
+		#ifdef USE_SUFFIX
+    if (getenv("USE_SUFFIX") != NULL) {
+      // Only add a suffix if the symbol is not defined in '/usr/*' and
       // is not a cprover built-in
-      if (sym.location.as_string().find("/usr/include") == std::string::npos &&
-          id2string(name).find("__CPROVER") == std::string::npos	
+      // AND is not a type specifier 
+      if (sym.location.as_string().find(EXCLUDE_FROM) == std::string::npos &&
+          id2string(name).find("__CPROVER") == std::string::npos &&
+          !sym.is_type
       ) {
         bool top_level = is_top_level(sym);
         name 					 = add_suffix(sym.name, top_level);
@@ -146,8 +145,8 @@ bool write_goto_binary(
 
 			auto name_str = id2string(fct.first);
 
-      #ifdef WRITE_MODDED
-      if (getenv("WRITE_MODDED") != NULL) {    
+      #ifdef USE_SUFFIX
+      if (getenv("USE_SUFFIX") != NULL) {    
         if (name_str.find("__CPROVER") == std::string::npos){
             name_str += SUFFIX;
         }

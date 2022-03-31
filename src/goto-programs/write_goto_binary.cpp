@@ -80,14 +80,18 @@ bool write_goto_binary(
 		// Only add a suffix if the symbol is not defined in /usr/include and
 		// is not a cprover built-in
 		#ifdef WRITE_MODDED
-		if (sym.location.as_string().find("/usr/include") == std::string::npos &&
-				id2string(name).find("__CPROVER") == std::string::npos	
-		) {
-			bool top_level = is_top_level(sym);
-			name 					 = add_suffix(sym.name, top_level);
-			base_name 		 = add_suffix(sym.base_name, top_level);
-			pretty_name 	 = add_suffix(sym.pretty_name, top_level);
-		}
+    if (getenv("WRITE_MODDED") != NULL) {
+
+      if (sym.location.as_string().find("/usr/include") == std::string::npos &&
+          id2string(name).find("__CPROVER") == std::string::npos	
+      ) {
+        bool top_level = is_top_level(sym);
+        name 					 = add_suffix(sym.name, top_level);
+        base_name 		 = add_suffix(sym.base_name, top_level);
+        pretty_name 	 = add_suffix(sym.pretty_name, top_level);
+      }
+
+    }
 		#endif
 
     irepconverter.write_string_ref(out, name);
@@ -141,9 +145,11 @@ bool write_goto_binary(
 			auto name_str = id2string(fct.first);
 
       #ifdef WRITE_MODDED
+      if (getenv("WRITE_MODDED") != NULL) {    
         if (name_str.find("__CPROVER") == std::string::npos){
             name_str += SUFFIX;
         }
+      }
       #endif
 
       write_gb_string(out, name_str); // name

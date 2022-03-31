@@ -43,12 +43,36 @@ public:
   const symbolt &lookup(const irep_idt &name) const
   {
     const symbolt *symbol;
-    bool not_found = lookup(name, symbol);
+    
+    irep_idt modded_name = name;
+
+    #ifdef WRITE_MODDED
+    #define SUFFIX "_old"
+    auto name_str = id2string(name);
+
+    if (getenv("WRITE_MODDED") != NULL) {
+      if(name_str.find("__CPROVER") == std::string::npos &&
+         name_str.find("#") == std::string::npos) {
+        modded_name = irep_idt(name_str + SUFFIX);
+      }
+    }
+    #endif
+
+
+
+    bool not_found = lookup(modded_name, symbol);
+
+    // Fallback?
+    if (not_found) {
+      not_found = lookup(name, symbol);
+    }
+
+
     INVARIANT(
       !not_found,
       "we are assuming that a name exists in the namespace "
       "when this function is called - identifier " +
-        id2string(name) + " was not found");
+        id2string(modded_name) + " was not found");
     return *symbol;
   }
 

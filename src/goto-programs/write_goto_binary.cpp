@@ -12,6 +12,7 @@ Author: CM Wintersteiger
 #include "write_goto_binary.h"
 
 #include <fstream>
+#include <csignal>
 
 #include <util/exception_utils.h>
 #include <util/irep_serialization.h>
@@ -21,15 +22,14 @@ Author: CM Wintersteiger
 #include <goto-programs/goto_model.h>
 
 #ifdef USE_SUFFIX
-
 #define SUFFIX "_old_b026324c6904b2a"
 #define EXCLUDE_FROM "/usr"
 
-bool is_top_level(const symbolt& sym){
-	return id2string(sym.name).find("::") == std::string::npos;
+static bool is_top_level(irep_idt name){
+	return id2string(name).find("::") == std::string::npos;
 }
 
-irep_idt add_suffix(irep_idt name, bool top_level){
+static irep_idt add_suffix(irep_idt name, bool top_level){
 		auto name_str = id2string(name);
 		size_t idx;
 
@@ -52,6 +52,7 @@ irep_idt add_suffix(irep_idt name, bool top_level){
 }
 #endif
 
+
 /// Writes a goto program to disc, using goto binary format
 bool write_goto_binary(
   std::ostream &out,
@@ -70,25 +71,35 @@ bool write_goto_binary(
 
     const symbolt &sym = symbol_pair.second;
 
+    auto value = sym.value;
+
     irepconverter.reference_convert(sym.type, out);
-    irepconverter.reference_convert(sym.value, out);
+    irepconverter.reference_convert(value, out);
     irepconverter.reference_convert(sym.location, out);
 
 		auto name 				 = sym.name;
 		auto base_name 		 = sym.base_name;
 		auto pretty_name 	 = sym.pretty_name;
     bool is_file_local = sym.is_file_local;
+    
+    //if(getenv("USE_SUFFIX") != NULL){ 
+
+    //  if(  base_name == "entity" )
+    //    std::raise(SIGINT);
+    //}
 
 		#ifdef USE_SUFFIX
     if (getenv("USE_SUFFIX") != NULL) {
-      // Only add a suffix if the symbol is not defined in '/usr/*' and
-      // is not a cprover built-in
+      // Only add a suffix if the symbol is not defined in '/usr/*',
+      // is not a cprover built-in,
+      // does not already have a suffix
       // AND is not a type specifier
       if (sym.location.as_string().find(EXCLUDE_FROM) == std::string::npos &&
           id2string(name).find("__CPROVER") == std::string::npos &&
+          id2string(name).find(SUFFIX) == std::string::npos &&
           !sym.is_type
       ) {
-        bool top_level = is_top_level(sym);
+        bool top_level = is_top_level(sym.name);
         name 					 = add_suffix(sym.name, top_level);
         base_name 		 = add_suffix(sym.base_name, top_level);
         pretty_name 	 = add_suffix(sym.pretty_name, top_level);
@@ -179,14 +190,19 @@ bool write_goto_binary(
 
         write_gb_word(out, instruction.labels.size());
 
+
+        // This iterates over goto labels in the actual original source code
         for(const auto &l_it : instruction.labels) {
-          irep_idt modded_label = l_it;
+          //irep_idt modded_label = l_it;
           //#ifdef USE_SUFFIX
           //  if (getenv("USE_SUFFIX") != NULL) {
-          //    modded_label = irep_idt(id2string(l_it) + SUFFIX);
+          //    modded_label = irep_idt(id2string(l_it) + "AAAAAAAAAAAAAAAAAAAAAAAAAAa");
           //  }
           //#endif
-					irepconverter.write_string_ref(out, modded_label);
+          //modded_label = irep_idt("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + std::to_string(i) );
+          //irepconverter.write_string_ref(out, modded_label);
+
+          irepconverter.write_string_ref(out, l_it);
         }
       }
     }

@@ -15,14 +15,51 @@ Date: May 2007
 
 #include <climits>
 #include <iostream>
+#include <unordered_set>
+#include <fstream>
 
 #include "exception_utils.h"
+#define SUFFIX "_old_b026324c6904b2a"
+
+void readNamesFromFile(std::string filename, std::unordered_set<std::string> &names) {
+  std::ifstream file(filename);
+
+  if (file.is_open()) {
+    std::string line;
+
+    while (std::getline(file,line)) {
+      names.insert(line);
+    }
+
+    file.close();
+  }
+}
+
 
 void irep_serializationt::write_irep(
   std::ostream &out,
   const irept &irep)
 {
-  write_string_ref(out, irep.id());
+  auto irep_modded = irep.id();
+  
+  #ifdef USE_SUFFIX
+  if (getenv("USE_SUFFIX") != NULL) {
+
+    std::unordered_set<std::string> names;
+    readNamesFromFile("/home/jonas/Repos/euf/expat/rename.txt", names);
+
+    //******* TODO ********//
+    //Rename symbols with foo::arg (foo)
+
+    // If the irep string corresponds to a global symbol rename it
+    if ( names.count(id2string(irep.id())) ) {
+    //if ( ! is_digits( id2string(irep.id()) ) ){
+      irep_modded =  irep_idt(id2string(irep.id()) + SUFFIX);
+    }
+  }
+  #endif
+  write_string_ref(out, irep_modded);
+
 
   for(const auto &sub_irep : irep.get_sub())
   {

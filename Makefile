@@ -26,12 +26,23 @@
 CMAKE_OUT=cbmc/build/Makefile
 TARGET=cbmc/build/bin/goto-cc
 NPROC=$(shell printf $$((`nproc` - 1)) )
-CXXFLAGS=-DUSE_SUFFIX
+CXXFLAGS=-DUSE_SUFFIX -g
+#CXXFLAGS=
 
+INPUT=~/.cache/euf/libexpat-bbdfcfef/expat/lib/xmlparse
+BASE_INPUT=xmlparse
 
 # We can get resolution using different names when we use a single file
 # but if we want to use _old and current in the same cbmc invocation we
 # need a better solution...
+
+# http://cprover.diffblue.com/classirept.html
+#
+# src/util/irep_serialization.cpp:	reference_convert()
+
+# THIS: irep_serializationt::write_irep()
+
+# !!: There is still one textual reference left for every function that has not been renamed...
 
 .PHONY: gen
 
@@ -46,12 +57,19 @@ $(TARGET): $(CMAKE_OUT)
 install: $(TARGET)
 	sudo make -C build install
 
-run: install
-	USE_SUFFIX=1 goto-cc ~/Repos/oniguruma/src/st.c -o st_old.o
-	USE_SUFFIX=1 cbmc --show-symbol-table st_old.o
-	goto-cc ~/Repos/oniguruma/src/st.c -o st.o
-	xxd st_old.o st_old.xxd
-	xxd st.o st.xxd
+
+gdb: install
+	USE_SUFFIX=1 gdb --args goto-cc $(INPUT).c -o $(INPUT)_old.o
+
+compile: install
+	USE_SUFFIX=1 goto-cc $(INPUT).c -o $(INPUT)_old.o
+	USE_SUFFIX=1 cbmc --show-symbol-table $(INPUT)_old.o
+	USE_SUFFIX=1 cbmc --list-goto-functions $(INPUT)_old.o
+	goto-cc $(INPUT).c -o $(INPUT).o
+
+
+driver: install
+	../scripts/cbmc_test.sh
 
 gen: $(CMAKE_OUT)
 	bear -- cmake --build build -- -j$(NPROC)

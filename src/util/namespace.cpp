@@ -141,9 +141,30 @@ bool namespacet::lookup(
 {
   symbol_tablet::symbolst::const_iterator it;
 
+  irep_idt modded_name = name;
+
+  #if 0
+  #ifdef USE_SUFFIX
+  auto name_str = id2string(name);
+
+  if (getenv("USE_SUFFIX") != NULL) {
+    // Unless the name is a __CPROVER internal symbol
+    // append SUFFIX to the resolution
+    if(name_str.find("__CPROVER") == std::string::npos &&
+       name_str.find("#") == std::string::npos &&
+       name_str.find(SUFFIX) == std::string::npos
+       ) {
+       bool top_level = is_top_level(name);
+       modded_name = add_suffix(name, top_level);
+    }
+  }
+  #endif
+  #endif
+
+
   if(symbol_table1!=nullptr)
   {
-    it=symbol_table1->symbols.find(name);
+    it=symbol_table1->symbols.find(modded_name);
 
     if(it!=symbol_table1->symbols.end())
     {
@@ -154,7 +175,7 @@ bool namespacet::lookup(
 
   if(symbol_table2!=nullptr)
   {
-    it=symbol_table2->symbols.find(name);
+    it=symbol_table2->symbols.find(modded_name);
 
     if(it!=symbol_table2->symbols.end())
     {

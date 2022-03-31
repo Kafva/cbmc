@@ -21,14 +21,18 @@ Author: CM Wintersteiger
 #include <goto-programs/goto_model.h>
 
 #ifdef USE_SUFFIX
+
+#define SUFFIX "_old_b026324c6904b2a"
+#define EXCLUDE_FROM "/usr"
+
 bool is_top_level(const symbolt& sym){
 	return id2string(sym.name).find("::") == std::string::npos;
 }
 
-irep_idt add_suffix(irep_idt name, bool top_level){	
+irep_idt add_suffix(irep_idt name, bool top_level){
 		auto name_str = id2string(name);
 		size_t idx;
-	
+
 		if ( (idx = name_str.find("::")) != std::string::npos) {
 			// Function parameters have symbol names on the form 'foo(arg) -> foo::arg'
 			// in this case we only want to rename the top specifier (foo)
@@ -38,7 +42,7 @@ irep_idt add_suffix(irep_idt name, bool top_level){
 
 		} else if (top_level && name_str.length() > 0) {
 			// If the name is a top level identifier, add a suffix
-			irep_idt new_name = irep_idt(name_str + SUFFIX);			
+			irep_idt new_name = irep_idt(name_str + SUFFIX);
 			return new_name;
 
 		} else {
@@ -69,7 +73,7 @@ bool write_goto_binary(
     irepconverter.reference_convert(sym.type, out);
     irepconverter.reference_convert(sym.value, out);
     irepconverter.reference_convert(sym.location, out);
-			
+
 		auto name 				 = sym.name;
 		auto base_name 		 = sym.base_name;
 		auto pretty_name 	 = sym.pretty_name;
@@ -79,7 +83,7 @@ bool write_goto_binary(
     if (getenv("USE_SUFFIX") != NULL) {
       // Only add a suffix if the symbol is not defined in '/usr/*' and
       // is not a cprover built-in
-      // AND is not a type specifier 
+      // AND is not a type specifier
       if (sym.location.as_string().find(EXCLUDE_FROM) == std::string::npos &&
           id2string(name).find("__CPROVER") == std::string::npos &&
           !sym.is_type
@@ -89,8 +93,8 @@ bool write_goto_binary(
         base_name 		 = add_suffix(sym.base_name, top_level);
         pretty_name 	 = add_suffix(sym.pretty_name, top_level);
 
-        // Expose all functions 
-        is_file_local  = false; 
+        // Expose all functions
+        is_file_local  = false;
       }
     }
 		#endif
@@ -146,7 +150,7 @@ bool write_goto_binary(
 			auto name_str = id2string(fct.first);
 
       #ifdef USE_SUFFIX
-      if (getenv("USE_SUFFIX") != NULL) {    
+      if (getenv("USE_SUFFIX") != NULL) {
         if (name_str.find("__CPROVER") == std::string::npos){
             name_str += SUFFIX;
         }
@@ -175,8 +179,15 @@ bool write_goto_binary(
 
         write_gb_word(out, instruction.labels.size());
 
-        for(const auto &l_it : instruction.labels)
-					irepconverter.write_string_ref(out, l_it);
+        for(const auto &l_it : instruction.labels) {
+          irep_idt modded_label = l_it;
+          //#ifdef USE_SUFFIX
+          //  if (getenv("USE_SUFFIX") != NULL) {
+          //    modded_label = irep_idt(id2string(l_it) + SUFFIX);
+          //  }
+          //#endif
+					irepconverter.write_string_ref(out, modded_label);
+        }
       }
     }
   }

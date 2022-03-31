@@ -26,9 +26,6 @@ class struct_tag_typet;
 class c_enum_tag_typet;
 class symbol_table_baset;
 
-#define SUFFIX "_old_b026324c6904b2a"
-#define EXCLUDE_FROM "/usr"
-
 /// Basic interface for a namespace. This is not used
 /// in practice, as the one being used is \ref namespacet
 /// which uses two symbol tables, and \ref multi_namespacet
@@ -46,37 +43,12 @@ public:
   const symbolt &lookup(const irep_idt &name) const
   {
     const symbolt *symbol;
-    
-    irep_idt modded_name = name;
-
-    #ifdef USE_SUFFIX
-    auto name_str = id2string(name);
-
-    if (getenv("USE_SUFFIX") != NULL) {
-      // Unless the name is a __CPROVER internal symbol
-      // append SUFFIX to the resolution
-      if(name_str.find("__CPROVER") == std::string::npos &&
-         name_str.find("#") == std::string::npos) {
-        modded_name = irep_idt(name_str + SUFFIX);
-      }
-    }
-    #endif
-
-    // If 'USE_SUFFIX' is set in the environemnt
-    // resolve all symbols to their suffixed version
-    bool not_found = lookup(modded_name, symbol);
-
-    // Fallback to resolution with the original name
-    // This is needed for type specifiers which we do not rename
-    if (not_found) {
-      not_found = lookup(name, symbol);
-    }
-
+    bool not_found = lookup(name, symbol);
     INVARIANT(
       !not_found,
       "we are assuming that a name exists in the namespace "
       "when this function is called - identifier " +
-        id2string(modded_name) + " was not found");
+        id2string(name) + " was not found");
     return *symbol;
   }
 

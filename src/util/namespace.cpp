@@ -17,8 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "std_expr.h"
 #include "symbol_table.h"
 
-
-
 namespace_baset::~namespace_baset()
 {
 }

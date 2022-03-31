@@ -47,7 +47,6 @@ public:
     irep_idt modded_name = name;
 
     #ifdef WRITE_MODDED
-    #define SUFFIX "_old"
     auto name_str = id2string(name);
 
     if (getenv("WRITE_MODDED") != NULL) {
@@ -58,15 +57,14 @@ public:
     }
     #endif
 
-
-
+    // If 'WRITE_MODDED' is set in the environemnt
+    // resolve all symbols to their suffixed version
     bool not_found = lookup(modded_name, symbol);
 
-    // Fallback?
+    // Fallback to resolution with the original name
     if (not_found) {
       not_found = lookup(name, symbol);
     }
-
 
     INVARIANT(
       !not_found,

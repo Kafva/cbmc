@@ -119,8 +119,6 @@ bool ansi_c_languaget::typecheck(
   remove_internal_symbols(
     new_symbol_table, this->get_message_handler(), keep_file_local);
 
-	// TODO: Rename symbols here?
-
   if(linking(symbol_table, new_symbol_table, get_message_handler()))
     return true;
 

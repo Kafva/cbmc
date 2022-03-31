@@ -27,7 +27,7 @@
 CMAKE_OUT=cbmc/build/Makefile
 TARGET=cbmc/build/bin/goto-cc
 NPROC=$(shell printf $$((`nproc` - 1)) )
-CXXFLAGS=-DWRITE_MODDED
+CXXFLAGS=-DWRITE_MODDED -DSUFFIX=_old_b026324c6904b2a
 
 .PHONY: gen
 

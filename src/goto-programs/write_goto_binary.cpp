@@ -73,15 +73,15 @@ bool write_goto_binary(
     irepconverter.reference_convert(sym.value, out);
     irepconverter.reference_convert(sym.location, out);
 			
-		auto name 				= sym.name;
-		auto base_name 		= sym.base_name;
-		auto pretty_name 	= sym.pretty_name;
+		auto name 				 = sym.name;
+		auto base_name 		 = sym.base_name;
+		auto pretty_name 	 = sym.pretty_name;
+    bool is_file_local = sym.is_file_local;
 
-		// Only add a suffix if the symbol is not defined in /usr/include and
-		// is not a cprover built-in
 		#ifdef WRITE_MODDED
     if (getenv("WRITE_MODDED") != NULL) {
-
+      // Only add a suffix if the symbol is not defined in /usr/include and
+      // is not a cprover built-in
       if (sym.location.as_string().find("/usr/include") == std::string::npos &&
           id2string(name).find("__CPROVER") == std::string::npos	
       ) {
@@ -89,8 +89,10 @@ bool write_goto_binary(
         name 					 = add_suffix(sym.name, top_level);
         base_name 		 = add_suffix(sym.base_name, top_level);
         pretty_name 	 = add_suffix(sym.pretty_name, top_level);
-      }
 
+        // Expose all functions 
+        is_file_local  = false; 
+      }
     }
 		#endif
 
@@ -117,7 +119,7 @@ bool write_goto_binary(
     flags = (flags << 1) | static_cast<int>(sym.is_lvalue);
     flags = (flags << 1) | static_cast<int>(sym.is_static_lifetime);
     flags = (flags << 1) | static_cast<int>(sym.is_thread_local);
-    flags = (flags << 1) | static_cast<int>(sym.is_file_local); // Drop this to make all functions accessible
+    flags = (flags << 1) | static_cast<int>(is_file_local);
     flags = (flags << 1) | static_cast<int>(sym.is_extern);
     flags = (flags << 1) | static_cast<int>(sym.is_volatile);
 

@@ -42,21 +42,7 @@ const symbolt &namespace_baset::lookup(const symbol_exprt &expr) const
 /// INVARIANT.
 const symbolt &namespace_baset::lookup(const tag_typet &type) const
 {
-  auto ident = type.get_identifier();
-
-  //#ifdef WRITE_MODDED
-  //#define SUFFIX "_old"
-  //auto ident_str = id2string(ident);
-
-  //if (std::string(getenv("WRITE_MODDED")).find("ON") != std::string::npos) {
-  //  if(ident_str.find("__CPROVER") == std::string::npos){
-  //    ident = irep_idt(ident_str + SUFFIX);
-  //  }
-  //} 
-
-  //#endif
-  return lookup(ident);
-
+  return lookup(type.get_identifier());
 }
 
 /// Resolve type symbol to the type it points to.

@@ -43,12 +43,8 @@ install: $(TARGET)
 	sudo make -C build install
 
 run: install
-	WRITE_MODDED=1 goto-cc ~/Repos/oniguruma/src/st.c -o st.o && \
-		WRITE_MODDED=1 cbmc --show-symbol-table st.o
-	xxd st.o st.xxd
-	#goto-cc ~/Repos/oniguruma/src/st.c -o st.o && 
-	#	cbmc --list-goto-functions st.o
-
+	WRITE_MODDED=1 goto-cc ~/Repos/oniguruma/src/st.c -o st.o
+	WRITE_MODDED=1 cbmc --show-symbol-table st.o
 
 gen: $(CMAKE_OUT)
 	bear -- cmake --build build -- -j$(NPROC)

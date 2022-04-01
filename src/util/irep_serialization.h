@@ -19,8 +19,25 @@ Date: May 2007
 #include <string>
 #include <vector>
 
+
 #include "irep_hash_container.h"
 #include "irep.h"
+
+#include <unordered_set>
+
+// "irep_serialization.h" is included by both irep_serialization.cpp 
+// and write_goto_binary.cpp
+#ifdef USE_SUFFIX
+#include <string>
+
+#define SUFFIX "_old_b026324c6904b2a"
+#define SUFFIX_ENV_FLAG "USE_SUFFIX"
+#define RENAME_TXT "/home/jonas/Repos/euf/expat/rename.txt"
+
+irep_idt add_suffix_to_global(irep_idt name,
+    std::unordered_set<std::string> &global_names);
+
+#endif
 
 void write_gb_word(std::ostream &, std::size_t);
 void write_gb_string(std::ostream &, const std::string &);
@@ -28,6 +45,12 @@ void write_gb_string(std::ostream &, const std::string &);
 class irep_serializationt
 {
 public:
+  std::unordered_set<std::string> global_names = {};
+
+  #ifdef USE_SUFFIX
+  void read_names_from_file(std::string filename);
+  #endif
+
   class ireps_containert
   {
   public:

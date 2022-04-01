@@ -15,51 +15,54 @@ Date: May 2007
 
 #include <climits>
 #include <iostream>
-#include <unordered_set>
-#include <fstream>
+
 
 #include "exception_utils.h"
-#define SUFFIX "_old_b026324c6904b2a"
 
-void readNamesFromFile(std::string filename, std::unordered_set<std::string> &global_names) {
+#ifdef USE_SUFFIX
+#include <fstream>
+#include <csignal>
+
+void irep_serializationt::read_names_from_file(std::string filename) {
   std::ifstream file(filename);
-
   if (file.is_open()) {
     std::string line;
-
     while (std::getline(file,line)) {
-      global_names.insert(line);
+      this->global_names.insert(line);
     }
-
     file.close();
   }
 }
 
-irep_idt addSuffixToGlobal(irep_idt ident, std::unordered_set<std::string> &global_names){
-		auto ident_str = id2string(ident);
-		size_t idx;
+/// Only adds a suffix if the provided name appears in the set of global symbols
+irep_idt add_suffix_to_global(irep_idt ident, 
+    std::unordered_set<std::string> &global_names){
 
-    // If the symbol references an argument or local variable
-    // we rename the top::level specifier
-		if ( (idx = ident_str.find("::")) != std::string::npos) {
-			
+		auto ident_str = id2string(ident);
+    size_t idx;
+    
+
+    if ( (idx = ident_str.find("::")) != std::string::npos) {
+      // Function parameters have symbol names on the form 'foo(arg) -> foo::arg'
+      // in this case we only want to rename the top specifier (foo)
       auto function_name = ident_str.substr(0,idx);
 
       if (global_names.count(function_name)) {
-
         auto children = ident_str.substr(idx, ident_str.length());
         return irep_idt(function_name + SUFFIX + children);
       }
 
-    } else if ( global_names.count(ident_str) ) {
-        // Top level identifier
-
-        return irep_idt(ident_str + SUFFIX);
+    } else if (global_names.count(ident_str)) {
+      // If the ident is a top level identifier (inside the list
+      // of global identifiers to rename), add a suffix
+      // Limiting replacement to a whitelist prevents problematic replacements
+      // of implicitly declared standard functions, e.g. arc4random()
+      return irep_idt(ident_str + SUFFIX);
     }
 
-    return ident;
+  return ident;
 }
-
+#endif
 
 void irep_serializationt::write_irep(
   std::ostream &out,
@@ -68,16 +71,14 @@ void irep_serializationt::write_irep(
   auto irep_modded = irep.id();
   
   #ifdef USE_SUFFIX
-  if (getenv("USE_SUFFIX") != NULL) {
-
-    std::unordered_set<std::string> global_names;
-    readNamesFromFile("/home/jonas/Repos/euf/expat/rename.txt", global_names);
-
-    irep_modded = addSuffixToGlobal(irep.id(), global_names);
+  if (getenv(SUFFIX_ENV_FLAG) != NULL) {
+    //if ( id2string(irep.id())  ==  "lookup")
+    //    std::raise(SIGINT);
+    irep_modded = add_suffix_to_global(irep.id(), this->global_names);
   }
   #endif
-  write_string_ref(out, irep_modded);
 
+  write_string_ref(out, irep_modded);
 
   for(const auto &sub_irep : irep.get_sub())
   {
@@ -178,8 +179,9 @@ void irep_serializationt::reference_convert(
     {h, ireps_container.ireps_on_write.size()});
 
   write_gb_word(out, res.first->second);
-  if(res.second)
+  if(res.second){
     write_irep(out, irep);
+  }
 }
 
 /// Write 7 bits of `u` each time, least-significant byte first, until we have

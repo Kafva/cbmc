@@ -12,7 +12,6 @@ Author: CM Wintersteiger
 #include "write_goto_binary.h"
 
 #include <fstream>
-#include <csignal>
 
 #include <util/exception_utils.h>
 #include <util/irep_serialization.h>
@@ -20,38 +19,6 @@ Author: CM Wintersteiger
 #include <util/symbol_table.h>
 
 #include <goto-programs/goto_model.h>
-
-#ifdef USE_SUFFIX
-#define SUFFIX "_old_b026324c6904b2a"
-#define EXCLUDE_FROM "/usr"
-
-static bool is_top_level(irep_idt name){
-	return id2string(name).find("::") == std::string::npos;
-}
-
-static irep_idt add_suffix(irep_idt name, bool top_level){
-		auto name_str = id2string(name);
-		size_t idx;
-
-		if ( (idx = name_str.find("::")) != std::string::npos) {
-			// Function parameters have symbol names on the form 'foo(arg) -> foo::arg'
-			// in this case we only want to rename the top specifier (foo)
-			auto new_name = name_str.substr(0,idx) + SUFFIX + \
-				name_str.substr(idx, name_str.length());
-			return irep_idt(new_name);
-
-		} else if (top_level && name_str.length() > 0) {
-			// If the name is a top level identifier, add a suffix
-			irep_idt new_name = irep_idt(name_str + SUFFIX);
-			return new_name;
-
-		} else {
-
-			return name;
-		}
-}
-#endif
-
 
 /// Writes a goto program to disc, using goto binary format
 bool write_goto_binary(
@@ -63,16 +30,33 @@ bool write_goto_binary(
   // first write symbol table
 
   write_gb_word(out, symbol_table.symbols.size());
+    
+
+  // Some calls to `reference_convert` will not need any renaming
+  std::unordered_set<std::string> empty_set = {}; 
+  
+  // Read in the list of global symbols to rename
+
+  #ifdef USE_SUFFIX
+    if (getenv(SUFFIX_ENV_FLAG) != NULL) {
+      irepconverter.read_names_from_file(RENAME_TXT);
+    }
+  #endif
 
   for(const auto &symbol_pair : symbol_table.symbols)
   {
     // Since version 2, symbols are not converted to ireps,
     // instead they are saved in a custom binary format
-
+      
     const symbolt &sym = symbol_pair.second;
 
     auto value = sym.value;
 
+    // `reference_convert` calls can store strings in the '.data' section
+    // of the resulting binary using `write_irep()`. If these strings correspond 
+    // to global symbol names they need to be renamed.
+    // We therefore inspect the list of global names in _ALL_ calls of:
+    //  src/util/irep_serialization.cpp:irep_serializationt::write_irep()
     irepconverter.reference_convert(sym.type, out);
     irepconverter.reference_convert(value, out);
     irepconverter.reference_convert(sym.location, out);
@@ -82,30 +66,15 @@ bool write_goto_binary(
 		auto pretty_name 	 = sym.pretty_name;
     bool is_file_local = sym.is_file_local;
     
-    //if(getenv("USE_SUFFIX") != NULL){ 
-
-    //  if(  base_name == "entity" )
-    //    std::raise(SIGINT);
-    //}
-
 		#ifdef USE_SUFFIX
-    if (getenv("USE_SUFFIX") != NULL) {
-      // Only add a suffix if the symbol is not defined in '/usr/*',
-      // is not a cprover built-in,
-      // does not already have a suffix
-      // AND is not a type specifier
-      if (sym.location.as_string().find(EXCLUDE_FROM) == std::string::npos &&
-          id2string(name).find("__CPROVER") == std::string::npos &&
-          id2string(name).find("arc4random") == std::string::npos &&
-          !sym.is_type
-          //id2string(name).find(SUFFIX) == std::string::npos &&
-      ) {
-        bool top_level = is_top_level(sym.name);
-        name 					 = add_suffix(sym.name, top_level);
-        base_name 		 = add_suffix(sym.base_name, top_level);
-        pretty_name 	 = add_suffix(sym.pretty_name, top_level);
+    if (getenv(SUFFIX_ENV_FLAG) != NULL) {
+      name 					 = add_suffix_to_global(sym.name, irepconverter.global_names);
+      base_name 		 = add_suffix_to_global(sym.base_name, irepconverter.global_names);
+      pretty_name 	 = add_suffix_to_global(sym.pretty_name, irepconverter.global_names);
 
-        // Expose all functions
+      // Ensure that the function is callable from another TU 
+      // (provided that it was given a suffix)
+      if (name != sym.name ) {
         is_file_local  = false;
       }
     }
@@ -162,11 +131,9 @@ bool write_goto_binary(
 			auto name_str = id2string(fct.first);
 
       #ifdef USE_SUFFIX
-      if (getenv("USE_SUFFIX") != NULL) {
-        if (name_str.find("__CPROVER") == std::string::npos &&
-            name_str.find("arc4random") == std::string::npos
-
-        ){
+      // Add a suffix to the function name for bodies
+      if (getenv(SUFFIX_ENV_FLAG) != NULL) {
+        if (irepconverter.global_names.count(name_str)) {
             name_str += SUFFIX;
         }
       }
@@ -177,6 +144,7 @@ bool write_goto_binary(
 
       for(const auto &instruction : fct.second.body.instructions)
       {
+        // Replace any occurences of global names in the reference conversion
         irepconverter.reference_convert(instruction.get_code(), out);
         irepconverter.reference_convert(instruction.source_location(), out);
         write_gb_word(out, (long)instruction.type());
@@ -194,18 +162,8 @@ bool write_goto_binary(
 
         write_gb_word(out, instruction.labels.size());
 
-
-        // This iterates over goto labels in the actual original source code
+        // This iterates over goto labels in the original source code
         for(const auto &l_it : instruction.labels) {
-          //irep_idt modded_label = l_it;
-          //#ifdef USE_SUFFIX
-          //  if (getenv("USE_SUFFIX") != NULL) {
-          //    modded_label = irep_idt(id2string(l_it) + "AAAAAAAAAAAAAAAAAAAAAAAAAAa");
-          //  }
-          //#endif
-          //modded_label = irep_idt("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + std::to_string(i) );
-          //irepconverter.write_string_ref(out, modded_label);
-
           irepconverter.write_string_ref(out, l_it);
         }
       }

@@ -17,8 +17,13 @@ NPROC=$(shell printf $$((`nproc` - 1)) )
 CXXFLAGS=-DUSE_SUFFIX
 #CXXFLAGS=
 
-INPUT=~/.cache/euf/libexpat-bbdfcfef/expat/lib/xmlparse
-BASE_INPUT=xmlparse
+#INPUT=~/.cache/euf/libexpat-bbdfcfef/expat/lib/xmlparse
+#BASE_INPUT=xmlparse
+#RENAME_TXT=~/Repos/euf/expat/rename.txt
+
+INPUT=~/.cache/euf/oniguruma-65a9b1aa/st
+BASE_INPUT=st
+RENAME_TXT=~/Repos/euf/tests/data/oni_rename.txt
 
 .PHONY: gen
 
@@ -35,14 +40,22 @@ install: $(TARGET)
 
 #  - - - - - - - - - - - - - - - - - - - - #
 
-compile: install
+run: install
+	cp $(RENAME_TXT) /tmp/rename.txt
 	USE_SUFFIX=1 goto-cc $(INPUT).c -o $(INPUT)_old.o
-	USE_SUFFIX=1 cbmc --show-symbol-table $(INPUT)_old.o
+	cbmc --show-symbol-table $(INPUT)_old.o
 	#USE_SUFFIX=1 cbmc --show-goto-functions $(INPUT)_old.o
 	goto-cc $(INPUT).c -o $(INPUT).o
 
 driver: install
 	../scripts/cbmc_test.sh
+
+example: install
+	cp $(RENAME_TXT) /tmp/rename.txt
+	USE_SUFFIX=1 goto-cc $(INPUT).c -o $(INPUT)_old.o
+	cbmc --show-goto-functions $(INPUT)_old.o | grep --color=always -A100 "^onig_st_add_direct"
+
+
 
 gdb: install
 	USE_SUFFIX=1 gdb --args goto-cc $(INPUT).c -o $(INPUT)_old.o

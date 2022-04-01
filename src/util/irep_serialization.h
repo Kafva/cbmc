@@ -23,6 +23,7 @@ Date: May 2007
 #include "irep.h"
 
 #include <unordered_set>
+#include <util/version.h>
 
 // "irep_serialization.h" is included by both irep_serialization.cpp
 // and write_goto_binary.cpp
@@ -30,8 +31,7 @@ Date: May 2007
 #include <string>
 
 #define SUFFIX "_old_b026324c6904b2a"
-#define SUFFIX_ENV_FLAG "USE_SUFFIX"
-#define RENAME_TXT "/home/jonas/Repos/euf/expat/rename.txt"
+#define RENAME_TXT "/tmp/rename.txt"
 
 irep_idt add_suffix_to_global(irep_idt name,
     std::unordered_set<std::string> &global_names);

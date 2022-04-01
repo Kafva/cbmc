@@ -54,6 +54,16 @@ void goto_cc_modet::help()
             <<
   "\n";
 
+  #ifdef USE_SUFFIX
+    std::cout
+      << align_center_with_border("Compiled with USE_SUFFIX") << '\n'
+      << align_center_with_border((getenv(SUFFIX_ENV_FLAG) != NULL ? 
+          "Renaming active: TRUE" : 
+          "Renaming active: FALSE"
+         )) 
+      << "\n";
+  #endif
+
   help_mode();
 
   std::cout <<

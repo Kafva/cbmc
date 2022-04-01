@@ -19,13 +19,12 @@ Date: May 2007
 #include <string>
 #include <vector>
 
-
 #include "irep_hash_container.h"
 #include "irep.h"
 
 #include <unordered_set>
 
-// "irep_serialization.h" is included by both irep_serialization.cpp 
+// "irep_serialization.h" is included by both irep_serialization.cpp
 // and write_goto_binary.cpp
 #ifdef USE_SUFFIX
 #include <string>

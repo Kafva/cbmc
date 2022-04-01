@@ -16,7 +16,6 @@ Date: May 2007
 #include <climits>
 #include <iostream>
 
-
 #include "exception_utils.h"
 
 #ifdef USE_SUFFIX
@@ -35,12 +34,12 @@ void irep_serializationt::read_names_from_file(std::string filename) {
 }
 
 /// Only adds a suffix if the provided name appears in the set of global symbols
-irep_idt add_suffix_to_global(irep_idt ident, 
+irep_idt add_suffix_to_global(irep_idt ident,
     std::unordered_set<std::string> &global_names){
 
-		auto ident_str = id2string(ident);
+    auto ident_str = id2string(ident);
     size_t idx;
-    
+
 
     if ( (idx = ident_str.find("::")) != std::string::npos) {
       // Function parameters have symbol names on the form 'foo(arg) -> foo::arg'
@@ -69,11 +68,9 @@ void irep_serializationt::write_irep(
   const irept &irep)
 {
   auto irep_modded = irep.id();
-  
+
   #ifdef USE_SUFFIX
   if (getenv(SUFFIX_ENV_FLAG) != NULL) {
-    //if ( id2string(irep.id())  ==  "lookup")
-    //    std::raise(SIGINT);
     irep_modded = add_suffix_to_global(irep.id(), this->global_names);
   }
   #endif
@@ -179,9 +176,9 @@ void irep_serializationt::reference_convert(
     {h, ireps_container.ireps_on_write.size()});
 
   write_gb_word(out, res.first->second);
-  if(res.second){
+  if(res.second)
     write_irep(out, irep);
-  }
+
 }
 
 /// Write 7 bits of `u` each time, least-significant byte first, until we have

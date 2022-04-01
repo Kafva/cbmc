@@ -30,11 +30,10 @@ bool write_goto_binary(
   // first write symbol table
 
   write_gb_word(out, symbol_table.symbols.size());
-    
 
   // Some calls to `reference_convert` will not need any renaming
-  std::unordered_set<std::string> empty_set = {}; 
-  
+  std::unordered_set<std::string> empty_set = {};
+
   // Read in the list of global symbols to rename
 
   #ifdef USE_SUFFIX
@@ -47,38 +46,34 @@ bool write_goto_binary(
   {
     // Since version 2, symbols are not converted to ireps,
     // instead they are saved in a custom binary format
-      
+
     const symbolt &sym = symbol_pair.second;
 
-    auto value = sym.value;
-
     // `reference_convert` calls can store strings in the '.data' section
-    // of the resulting binary using `write_irep()`. If these strings correspond 
+    // of the resulting binary using `write_irep()`. If these strings correspond
     // to global symbol names they need to be renamed.
     // We therefore inspect the list of global names in _ALL_ calls of:
     //  src/util/irep_serialization.cpp:irep_serializationt::write_irep()
     irepconverter.reference_convert(sym.type, out);
-    irepconverter.reference_convert(value, out);
+    irepconverter.reference_convert(sym.value, out);
     irepconverter.reference_convert(sym.location, out);
 
-		auto name 				 = sym.name;
-		auto base_name 		 = sym.base_name;
-		auto pretty_name 	 = sym.pretty_name;
+    auto name          = sym.name;
+    auto base_name     = sym.base_name;
+    auto pretty_name   = sym.pretty_name;
     bool is_file_local = sym.is_file_local;
-    
-		#ifdef USE_SUFFIX
-    if (getenv(SUFFIX_ENV_FLAG) != NULL) {
-      name 					 = add_suffix_to_global(sym.name, irepconverter.global_names);
-      base_name 		 = add_suffix_to_global(sym.base_name, irepconverter.global_names);
-      pretty_name 	 = add_suffix_to_global(sym.pretty_name, irepconverter.global_names);
 
-      // Ensure that the function is callable from another TU 
-      // (provided that it was given a suffix)
-      if (name != sym.name ) {
-        is_file_local  = false;
-      }
+    #ifdef USE_SUFFIX
+    if (getenv(SUFFIX_ENV_FLAG) != NULL) {
+      name           = add_suffix_to_global(sym.name, irepconverter.global_names);
+      base_name      = add_suffix_to_global(sym.base_name, irepconverter.global_names);
+      pretty_name    = add_suffix_to_global(sym.pretty_name, irepconverter.global_names);
     }
-		#endif
+    #endif
+
+    // Ensure that every function is callable from another TU
+    // **** APPLIES REGARDLESS of `SUFFIX_ENV_FLAG` ****
+    is_file_local  = false;
 
     irepconverter.write_string_ref(out, name);
     irepconverter.write_string_ref(out, sym.module);
@@ -128,7 +123,7 @@ bool write_goto_binary(
       // Since version 2, goto functions are not converted to ireps,
       // instead they are saved in a custom binary format
 
-			auto name_str = id2string(fct.first);
+      auto name_str = id2string(fct.first);
 
       #ifdef USE_SUFFIX
       // Add a suffix to the function name for bodies
@@ -163,9 +158,8 @@ bool write_goto_binary(
         write_gb_word(out, instruction.labels.size());
 
         // This iterates over goto labels in the original source code
-        for(const auto &l_it : instruction.labels) {
+        for(const auto &l_it : instruction.labels)
           irepconverter.write_string_ref(out, l_it);
-        }
       }
     }
   }

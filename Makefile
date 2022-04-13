@@ -25,6 +25,9 @@ INPUT=~/.cache/euf/oniguruma-65a9b1aa/st
 BASE_INPUT=st
 RENAME_TXT=~/Repos/euf/tests/data/oni_rename.txt
 
+EXAMPLE=examples/xmlparse.c
+RENAME_TXT=~/Repos/euf/expat/rename.txt
+
 .PHONY: gen
 
 $(CMAKE_OUT):
@@ -47,13 +50,21 @@ run: install
 	#USE_SUFFIX=1 cbmc --show-goto-functions $(INPUT)_old.o
 	goto-cc $(INPUT).c -o $(INPUT).o
 
+# Shows why we need to hook into the creation, not all references are resolved
+compare: install
+	echo "lookup\nXML_ErrorString" > /tmp/rename.txt
+	./carver.py examples/xmlparse.gb examples/xmlparse_carved.gb
+	USE_SUFFIX=1 goto-cc examples/xmlparse.gb -o examples/xmlparse_sound.gb
+	goto-cc -DCBMC examples/XML_ErrorString.c examples/xmlparse_carved.gb -o runner
+	cbmc --function euf_main ./runner
+
 driver: install
-	../scripts/cbmc_test.sh
+	./test_driver.sh
 
 example: install
 	cp $(RENAME_TXT) /tmp/rename.txt
 	USE_SUFFIX=1 goto-cc $(INPUT).c -o $(INPUT)_old.o
-	cbmc --show-goto-functions $(INPUT)_old.o | grep --color=always -A100 "^onig_st_add_direct"
+	cbmc  --show-goto-functions $(INPUT)_old.o | grep --color=always -A100 "^onig_st_add_direct"
 
 
 

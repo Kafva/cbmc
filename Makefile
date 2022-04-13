@@ -58,15 +58,10 @@ compare: install
 	goto-cc -DCBMC examples/XML_ErrorString.c examples/xmlparse_carved.gb -o runner
 	cbmc --function euf_main ./runner
 
-driver: install
-	./test_driver.sh
-
 example: install
 	cp $(RENAME_TXT) /tmp/rename.txt
 	USE_SUFFIX=1 goto-cc $(INPUT).c -o $(INPUT)_old.o
 	cbmc  --show-goto-functions $(INPUT)_old.o | grep --color=always -A100 "^onig_st_add_direct"
-
-
 
 gdb: install
 	USE_SUFFIX=1 gdb --args goto-cc $(INPUT).c -o $(INPUT)_old.o

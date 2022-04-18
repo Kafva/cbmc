@@ -6876,12 +6876,11 @@ hash(XML_Parser parser, KEY s) {
 static NAMED *
 lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
   size_t i;
-  if (table->size == 0) {
-    size_t tsize;
+  if (table->size == 0) { /***** ::1::1 *******/
+    size_t tsize; // lookup::1::1::tsize
     if (! createSize)
       return NULL;
     table->power = INIT_POWER;
-    /* table->size is a power of 2 */
     table->size = (size_t)1 << INIT_POWER;
     tsize = table->size * sizeof(NAMED *);
     table->v = table->mem->malloc_fcn(tsize);
@@ -6891,12 +6890,12 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
     }
     memset(table->v, 0, tsize);
     i = hash(parser, name) & ((unsigned long)table->size - 1);
-  } else {
-    unsigned long h = hash(parser, name);
+  } else { /***** ::1::2 *******/
+    unsigned long h = hash(parser, name); // lookup::1::2::h
     unsigned long mask = (unsigned long)table->size - 1;
     unsigned char step = 0;
     i = h & mask;
-    while (table->v[i]) {
+    while (table->v[i]) { /***** ::1::2::1 *******/
       if (keyeq(name, table->v[i]->name))
         return table->v[i];
       if (! step)
@@ -6906,19 +6905,16 @@ lookup(XML_Parser parser, HASH_TABLE *table, KEY name, size_t createSize) {
     if (! createSize)
       return NULL;
 
-    /* check for overflow (table is half full) */
-    if (table->used >> (table->power - 1)) {
+    if (table->used >> (table->power - 1)) { /***** ::1::2::2 *******/
       unsigned char newPower = table->power + 1;
 
-      /* Detect and prevent invalid shift */
-      if (newPower >= sizeof(unsigned long) * 8 /* bits per byte */) {
+      if (newPower >= sizeof(unsigned long) * 8) {
         return NULL;
       }
 
       size_t newSize = (size_t)1 << newPower;
-      unsigned long newMask = (unsigned long)newSize - 1;
+      unsigned long newMask = (unsigned long)newSize - 1; // lookup::1::2::2::newMask
 
-      /* Detect and prevent integer overflow */
       if (newSize > (size_t)(-1) / sizeof(NAMED *)) {
         return NULL;
       }

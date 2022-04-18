@@ -61,7 +61,7 @@ with open(sys.argv[1], mode='rb') as f:
     content += f.read(1) # Version number
 
     # Number of symbols in the symbol table, should be the same as:
-    #   `cbmc --show-symbol-table goto/xmlrole.o | grep -c "^Symbol\."`
+    #   `cbmc --show-symbol-table examples/xmlparse.gb | grep -c "^Symbol\."`
     symbol_cnt_bytes = f.read(2)
     symbol_count = decode_int_7bit(bytearray(symbol_cnt_bytes))
     content += symbol_cnt_bytes
@@ -70,11 +70,14 @@ with open(sys.argv[1], mode='rb') as f:
     blob = f.read()
 
     global_names =[]
-    with open("../expat/rename.csv", mode="r", encoding="utf8") as f:
+    #with open("../expat/rename.csv", mode="r", encoding="utf8") as f:
+    #    for line in f.readlines():
+    #        first_index = line.index(";")
+    #        second_index = line.index(";", first_index+1)
+    #        global_names.append( line[first_index+1 : second_index] )
+    with open("/tmp/rename.txt", mode='r', encoding="utf8") as f:
         for line in f.readlines():
-            first_index = line.index(";")
-            second_index = line.index(";", first_index+1)
-            global_names.append( line[first_index+1 : second_index] )
+            global_names.append(line.rstrip('\n'))
 
     # A lot of the textual symbols are terminated with a null character and start 
     # with \x86 \x01

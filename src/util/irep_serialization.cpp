@@ -170,15 +170,29 @@ void irep_serializationt::reference_convert(
   const irept &irep,
   std::ostream &out)
 {
+  // Calculate the hashcode for the irept
   std::size_t h=ireps_container.irep_full_hash_container.number(irep);
 
+  // ireps_on_write:  map<size_t,size_t>
+  //  The key is the hashcode, the value is the current number of irepts
+  //  written to the output stream. This value can be used an index
+  //  amongst the serialised irept structures in the output binary 
+  //  to determine what value is being referenced
+  // Insertion returns: 
+  //   pair<iterator<pair<long uint, long uint>>,bool>
+  // where
+  //  .first: A reference to an existing entry with the provided key
+  //  (h) or a reference to the inserted element
+  //  .second: true if an insertion took place
   const auto res = ireps_container.ireps_on_write.insert(
     {h, ireps_container.ireps_on_write.size()});
-
+  
+  // Write the 'irept index' to disk 
   write_gb_word(out, res.first->second);
-  if(res.second)
-    write_irep(out, irep);
 
+  // Serialise the irept to disk if it has not occurred before 
+  if(res.second) 
+    write_irep(out, irep);
 }
 
 /// Write 7 bits of `u` each time, least-significant byte first, until we have

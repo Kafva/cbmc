@@ -33,7 +33,7 @@ Date: May 2007
 #define SUFFIX "_old_b026324c6904b2a"
 #define RENAME_TXT "/tmp/rename.txt"
 
-irep_idt add_suffix_to_global(irep_idt name,
+irep_idt add_suffix_to_global(irep_idt ident,
     std::unordered_set<std::string> &global_names);
 
 #endif

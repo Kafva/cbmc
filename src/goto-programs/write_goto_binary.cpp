@@ -31,11 +31,7 @@ bool write_goto_binary(
 
   write_gb_word(out, symbol_table.symbols.size());
 
-  // Some calls to `reference_convert` will not need any renaming
-  std::unordered_set<std::string> empty_set = {};
-
   // Read in the list of global symbols to rename
-
   #ifdef USE_SUFFIX
     if (getenv(SUFFIX_ENV_FLAG) != NULL) {
       irepconverter.read_names_from_file(RENAME_TXT);
@@ -58,28 +54,15 @@ bool write_goto_binary(
     irepconverter.reference_convert(sym.value, out);
     irepconverter.reference_convert(sym.location, out);
 
-    auto name          = sym.name;
-    auto base_name     = sym.base_name;
-    auto pretty_name   = sym.pretty_name;
-    bool is_file_local = sym.is_file_local;
-
-    #ifdef USE_SUFFIX
-    if (getenv(SUFFIX_ENV_FLAG) != NULL) {
-      name           = add_suffix_to_global(sym.name, irepconverter.global_names);
-      base_name      = add_suffix_to_global(sym.base_name, irepconverter.global_names);
-      pretty_name    = add_suffix_to_global(sym.pretty_name, irepconverter.global_names);
-    }
-    #endif
-
     // Ensure that every function is callable from another TU
     // **** APPLIES REGARDLESS of `SUFFIX_ENV_FLAG` ****
-    is_file_local  = false;
+    bool is_file_local  = false;
 
-    irepconverter.write_string_ref(out, name);
+    irepconverter.write_string_ref(out, sym.name);
     irepconverter.write_string_ref(out, sym.module);
-    irepconverter.write_string_ref(out, base_name);
+    irepconverter.write_string_ref(out, sym.base_name);
     irepconverter.write_string_ref(out, sym.mode);
-    irepconverter.write_string_ref(out, pretty_name);
+    irepconverter.write_string_ref(out, sym.pretty_name);
 
     write_gb_word(out, 0); // old: sym.ordering
 
@@ -126,7 +109,6 @@ bool write_goto_binary(
       auto name_str = id2string(fct.first);
 
       #ifdef USE_SUFFIX
-      // Add a suffix to the function name for bodies
       if (getenv(SUFFIX_ENV_FLAG) != NULL) {
         if (irepconverter.global_names.count(name_str)) {
             name_str += SUFFIX;
@@ -134,6 +116,7 @@ bool write_goto_binary(
       }
       #endif
 
+      // Bypasses, write_string_ref(), a suffix must be explicitly added
       write_gb_string(out, name_str); // name
       write_gb_word(out, fct.second.body.instructions.size()); // # instructions
 

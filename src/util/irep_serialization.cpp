@@ -69,12 +69,6 @@ void irep_serializationt::write_irep(
 {
   auto irep_modded = irep.id();
 
-  #ifdef USE_SUFFIX
-  if (getenv(SUFFIX_ENV_FLAG) != NULL) {
-    irep_modded = add_suffix_to_global(irep.id(), this->global_names);
-  }
-  #endif
-
   write_string_ref(out, irep_modded);
 
   for(const auto &sub_irep : irep.get_sub())
@@ -302,7 +296,16 @@ void irep_serializationt::write_string_ref(
   {
     ireps_container.string_map[id]=true;
     write_gb_word(out, id);
-    write_gb_string(out, id2string(s));
+
+    // Add a suffix to every string reference
+    auto modded_irept = s;
+    #ifdef USE_SUFFIX
+    if (getenv(SUFFIX_ENV_FLAG) != NULL) {
+      modded_irept = add_suffix_to_global(s, this->global_names);
+    }
+    #endif
+
+    write_gb_string(out, id2string(modded_irept));
   }
 }
 

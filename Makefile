@@ -54,7 +54,7 @@ run: install
 compare: install
 	printf "lookup\nXML_ErrorString\n" > /tmp/rename.txt
 	./carver.py examples/xmlparse.gb examples/xmlparse_carved.gb
-	USE_SUFFIX=1 goto-cc examples/xmlparse.gb -o examples/xmlparse_sound.gb
+	USE_SUFFIX=1 goto-cc examples/xmlparse.gb -o examples/xmlparse_new.gb
 	#goto-cc -DCBMC examples/XML_ErrorString.c examples/xmlparse_carved.gb -o runner
 	#cbmc --function euf_main ./runner
 

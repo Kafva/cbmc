@@ -56,7 +56,14 @@ bool write_goto_binary(
 
     // Ensure that every function is callable from another TU
     // **** APPLIES REGARDLESS of `SUFFIX_ENV_FLAG` ****
-    bool is_file_local  = false;
+    // Note: applying this for all identifiers can cause issues
+    // when the same identifier is defined across multiple TUs
+    //
+    // We therefore limit this change to a list of provided names
+    bool is_file_local = sym.is_file_local;
+    if (irepconverter.global_names.count(id2string(sym.name))) {
+      is_file_local  = false;
+    }
 
     irepconverter.write_string_ref(out, sym.name);
     irepconverter.write_string_ref(out, sym.module);

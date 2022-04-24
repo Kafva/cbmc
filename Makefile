@@ -17,16 +17,14 @@ NPROC=$(shell printf $$((`nproc` - 1)) )
 CXXFLAGS=-DUSE_SUFFIX
 #CXXFLAGS=
 
-#INPUT=~/.cache/euf/libexpat-bbdfcfef/expat/lib/xmlparse
-#BASE_INPUT=xmlparse
-#RENAME_TXT=~/Repos/euf/expat/rename.txt
 
-INPUT=~/.cache/euf/oniguruma-65a9b1aa/st
-BASE_INPUT=st
-RENAME_TXT=~/Repos/euf/tests/data/oni_rename.txt
+#INPUT=~/.cache/euf/oniguruma-65a9b1aa/st
+#BASE_INPUT=st
+#RENAME_TXT=~/Repos/euf/tests/data/oni_rename.txt
 
-EXAMPLE=examples/xmlparse.c
-RENAME_TXT=~/Repos/euf/expat/rename.txt
+INPUT=~/.cache/euf/libexpat-bbdfcfef/expat/lib/xmlparse
+BASE_INPUT=xmlparse
+RENAME_TXT=~/Repos/euf/examples/expat/rename.txt
 
 .PHONY: gen
 

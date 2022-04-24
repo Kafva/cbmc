@@ -32,10 +32,12 @@ bool write_goto_binary(
   write_gb_word(out, symbol_table.symbols.size());
 
   // Read in the list of global symbols to rename
+  // Note that we read this file even when SUFFIX_ENV_FLAG
+  // is unset since global names need to be stripped
+  // of the is_file_local flag regardless of if
+  // we are adding suffixes
   #ifdef USE_SUFFIX
-    if (getenv(SUFFIX_ENV_FLAG) != NULL) {
-      irepconverter.read_names_from_file(RENAME_TXT);
-    }
+    irepconverter.read_names_from_file(RENAME_TXT);
   #endif
 
   for(const auto &symbol_pair : symbol_table.symbols)

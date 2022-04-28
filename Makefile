@@ -39,6 +39,16 @@ $(TARGET): $(CMAKE_OUT)
 install: $(TARGET)
 	sudo make -C build install
 
+usb: install
+	@EXIT=false PROJ=libusb \
+	FILE=libusb/core.c \
+	SHOW_DIFF=false \
+	CONTEXT_LINES=0 \
+	SILENT=false \
+	../scripts/test_harness.sh \
+	examples/libusb.json \
+	libusb_attach_kernel_driver
+
 #  - - - - - - - - - - - - - - - - - - - - #
 
 run: install
@@ -67,6 +77,9 @@ gdb: install
 gen: $(CMAKE_OUT)
 	bear -- cmake --build build -- -j$(NPROC)
 
-clean:
-	sudo rm -rf build ./regression/goto-gcc/archives/foo.o
+clean_tests:
+	sudo rm -f ./regression/goto-gcc/archives/foo.o
+
+clean: clean_tests
+	sudo rm -rf build 
 

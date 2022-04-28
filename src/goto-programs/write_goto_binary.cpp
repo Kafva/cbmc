@@ -51,7 +51,7 @@ bool write_goto_binary(
     // of the resulting binary using `write_irep()`. If these strings correspond
     // to global symbol names they need to be renamed.
     // We therefore inspect the list of global names in _ALL_ calls of:
-    //  src/util/irep_serialization.cpp:irep_serializationt::write_irep()
+    //  src/util/irep_serialization.cpp:irep_serializationt::write_string_ref()
     irepconverter.reference_convert(sym.type, out);
     irepconverter.reference_convert(sym.value, out);
     irepconverter.reference_convert(sym.location, out);

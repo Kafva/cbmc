@@ -1,0 +1,55 @@
+{
+  "PROJECT_DIR": "~/Repos/libcups",
+  "DEPENDENCY_DIR": "~/Repos/libusb",
+  "DEPLIB_NAME": "libusb-1.0.a",
+  "EXPLICIT_RENAME": [
+    "usbi_os_backend",
+    "usbi_backend"
+  ],
+  "CUSTOM_HEADERS": {
+    "linux_usbfs.c": [
+      "libusb/libusbi.h"
+    ],
+    "linux_netlink.c": [
+      "libusb/libusbi.h"
+    ],
+    "linux_udev.c": [
+      "libusb/libusbi.h"
+    ]
+  },
+  "EXCLUDE_REGEXES": [
+    "android/.*",
+    "Xcode/.*",
+    "msvc/.*",
+    "examples/.*",
+    "tests/.*",
+    "libusb/os/darwin*",
+    "libusb/os/windows*",
+    "libusb/os/haiku*",
+    "libusb/os/freebsd*",
+    "libusb/os/netbsd*",
+    "libusb/os/openbsd*",
+    "libusb/os/sunos*",
+    "libusb/os/threads_windows.h"
+  ],
+  "FORCE_RECOMPILE": true,
+  "FORCE_CCDB_RECOMPILE": false,
+  "SHOW_FUNCTIONS": false,
+  "CBMC_OPTS_STR": "--object-bits 12 --unwind 1 --unwinding-assertions --havoc-undefined-functions",
+  "CBMC_TIMEOUT": 10,
+  "ENABLE_RESULT_LOG": true,
+  "DIE_ON_ERROR": true,
+  "SILENT_IDENTITY_VERIFICATION": true,
+  "SILENT_VERIFICATION": true,
+  "USE_EXISTING_DRIVERS": false,
+  "ORDER_BY_CALL_SITE": true,
+  "VERBOSITY": 2,
+  "NPROC": 15,
+  "SKIP_BLAME": false,
+  "SKIP_IMPACT": true,
+  "FULL": true,
+  "QUIET_BUILD": true,
+  "COMMIT_OLD": "5d089e49",
+  "COMMIT_NEW": "f7084fea"
+}
+
